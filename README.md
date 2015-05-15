@@ -3,10 +3,6 @@
 Uses the step counter service APIs introduced in Android 4.4 KitKat to, you guessed it, count the number of steps whomever is holding the device running your app takes.
 
 ## Using
-Clone the plugin
-
-    $ git clone https://github.com/texh/cordova-plugin-stepcounter.git
-
 Create a new Cordova Project
 
     $ cordova create hello com.example.helloapp Hello
@@ -14,7 +10,7 @@ Create a new Cordova Project
 Install the plugin
 
     $ cd hello
-    $ cordova plugin install ../cordova-plugin-stepcounter
+    $ cordova plugin add https://github.com/Slidee/cordova-plugin-stepcounter.git
     
 
 Edit `www/js/index.html` and add the following code inside `onDeviceReady`
@@ -38,11 +34,27 @@ Edit `www/js/index.html` and add the following code inside `onDeviceReady`
     // Stop the step counter
     stepcounter.stop(success, failure);
 
-    // Get the amount of steps since calling start (or 0 if it hasn't been run)
+    // Get the amount of steps for today (or -1 if it no data given)
     stepcounter.getStepCount(success, failure);
 
     // Returns true/false if Android device is running >API level 19 && has the step counter API available
     stepcounter.deviceCanCountSteps(success, failure);
+
+    // Get the step history (JSON formatted)
+    // sample result :
+    //{
+    //  "2015-01-01":{"offset": 123, "steps": 456},
+    //  "2015-01-02":{"offset": 579, "steps": 789}
+    //  ...
+    //}
+    stepcounter.getHistory(
+        function(result){
+            success(result);
+            var historyData = JSON.parse(result);
+        },
+        failure
+    );
+
 ```
 
 Install Android platform
@@ -51,7 +63,15 @@ Install Android platform
     
 Run the code
 
-    cordova run 
+    cordova run
+
+## Changes in 0.0.2
+
+The StepCounterService is now automatically relaunched when killed (and after one hour for some 4.4.2 START_STICKY Service problem).
+The StepCounterService should be automatically launched on device boot (using StepCounterBootReceiver)
+
+All the step counter data are saved in the "UserData" SharedPrefs, with the "pedometerData" key so we keep the step counting history JSON formatted ("day": {"offset": XXX,"steps": YYY}
+A new js function (for cordova) called getHistory() has been added to access the JSON formatted data containing step count history
 
 ## Compatibility
 
@@ -61,15 +81,15 @@ Use stepcounter.deviceCanCountSteps() to see if a device meets these requirement
 
 ## Here be dragons
 
-The quality, usefulness and functionality of this code is in no way guaranteed. This is far from production ready stuff you're looking at, and definitely has a few hairy parts that need combing over.
+The quality, usefulness and functionality of this code is in no way guaranteed.
+This is far from production ready stuff you're looking at, and definitely has a few hairy parts that need combing over.
 If you'd like to help, I'd love to hear from you!
-
-### Outstanding issues
-
-Android seems to randomly kill the step counter if your application is running in the background (ie. in the case of multitasking)
 
 ## More Info
 
 For more information on setting up Cordova see [the documentation](http://cordova.apache.org/docs/en/4.0.0/guide_cli_index.md.html#The%20Command-Line%20Interface)
-
 For more info on plugins see the [Plugin Development Guide](http://cordova.apache.org/docs/en/4.0.0/guide_hybrid_plugins_index.md.html#Plugin%20Development%20Guide)
+
+## Todo / Work in progress
+
+It should be intersting to merge this plugin with an ios compatible plugin such as [leecrossley/cordova-plugin-pedometer](https://github.com/leecrossley/cordova-plugin-pedometer)
