@@ -63,6 +63,12 @@ Install Android platform
 Run the code
 
     cordova run
+    
+## Changes in 0.0.4
+
+Added : Re-integrated support for getStepCount which return the step counted since app is started
+Added : Method getTodayStepsCount for an agregated steps count for all a day (uses offset and history to calculate)
+Fixed : Issue with phone rebooting in a middle of a day (causes negative steps for the day, due to step < offset) 
 
 ## Changes in 0.0.3
 
@@ -97,3 +103,4 @@ For more info on plugins see the [Plugin Development Guide](http://cordova.apach
 
 It should be interesting to merge this plugin with an ios compatible plugin such as [leecrossley/cordova-plugin-pedometer](https://github.com/leecrossley/cordova-plugin-pedometer).
 We should look into changing the interface of this plugin for v0.1.0 release to match that of [leecrossley/cordova-plugin-pedometer](https://github.com/leecrossley/cordova-plugin-pedometer) as closely as possible so as to be able to work towards this in the future.
+We should review the storage way in StepCounterService to use SQLite rather than SharedPreferences, so the custom queries will be possible
