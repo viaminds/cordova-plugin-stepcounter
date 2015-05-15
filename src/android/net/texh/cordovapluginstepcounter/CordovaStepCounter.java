@@ -47,7 +47,7 @@ public class CordovaStepCounter extends CordovaPlugin {
 
     private final String TAG = "CordovaStepCounter";
 
-    //private final String ACTION_CONFIGURE        = "configure";
+    //private final String ACTION_CONFIGURE      = "configure";
     private final String ACTION_START            = "start";
     private final String ACTION_STOP             = "stop";
     private final String ACTION_GET_STEPS        = "get_step_count";
@@ -55,14 +55,16 @@ public class CordovaStepCounter extends CordovaPlugin {
     private final String ACTION_CAN_COUNT_STEPS  = "can_count_steps";
     private final String ACTION_GET_HISTORY      = "get_history";
 
+    public static final String USER_DATA_PREF              = "UserData";
+    public static final String PEDOMETER_HISTORY_PREF      = "pedometerData";
+    public static final String PEDOMETER_ACTIVE_PREF       = "pedometerActive";
+
 
     private Intent  stepCounterIntent;
     private Boolean isEnabled    = false;
 
     private StepCounterService stepCounterService;
     private boolean bound = false;
-
-    private Integer beginningOffset = 0;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
@@ -80,6 +82,25 @@ public class CordovaStepCounter extends CordovaPlugin {
     };
 
     @Override
+    public void onStart() {
+        Activity activity = this.cordova.getActivity();
+        SharedPreferences sharedPref = activity.getSharedPreferences(USER_DATA_PREF, Context.MODE_PRIVATE);
+        Boolean pActive = this.getPedometerIsActive(sharedPref);
+        if(pActive){
+            if(stepCounterIntent == null){
+                stepCounterIntent = new Intent(activity, StepCounterService.class);
+                activity.startService(stepCounterIntent);
+            }
+
+            if(!bound){
+                activity.bindService(stepCounterIntent, mConnection, Context.BIND_AUTO_CREATE);
+            }
+
+        }
+        super.onStart();
+    }
+
+    @Override
     public boolean execute(String action, JSONArray data, CallbackContext callbackContext) throws JSONException {
         LOG.i(TAG, "execute()");
         Boolean result = true;
@@ -87,35 +108,55 @@ public class CordovaStepCounter extends CordovaPlugin {
         Activity activity = this.cordova.getActivity();
         stepCounterIntent = new Intent(activity, StepCounterService.class);
 
+        //Get stored value for pedometerActive
+        SharedPreferences sharedPref = activity.getSharedPreferences(USER_DATA_PREF, Context.MODE_PRIVATE);
+        Boolean pActive = this.getPedometerIsActive(sharedPref);
+
+
         if (ACTION_CAN_COUNT_STEPS.equals(action)) {
             Boolean can = deviceHasStepCounter(activity.getPackageManager());
             Log.i(TAG, "Checking if device has step counter APIS: "+ can);
             callbackContext.success( can ? 1 : 0 );
         }
         else if (ACTION_START.equals(action)) {
-            beginningOffset = data.getInt(0);
 
-            Log.i(TAG, "Starting StepCounterService");
-            isEnabled = true;
-            //stepCounterIntent.putExtra("beginningOffset", beginningOffset);
-            activity.startService(stepCounterIntent);
-            activity.bindService(stepCounterIntent, mConnection, Context.BIND_AUTO_CREATE);
-        }
-        else if (ACTION_STOP.equals(action)) {
-            Log.i(TAG, "Stopping StepCounterService");
-            if (isEnabled && bound) {
-                stepCounterService.stopTracking();
-                activity.unbindService(mConnection);
-                bound = false;
-            } else {
-                Log.i(TAG, "Unable to manually stop step counter");
+            if(!pActive){
+                Log.i(TAG, "Starting StepCounterService");
+                //Update pedometerActive preference
+                this.setPedometerIsActive(sharedPref, true);
+                activity.startService(stepCounterIntent);
+            }else{
+                Log.i(TAG, "StepCounterService Already Started before, just binding to it");
             }
 
-            isEnabled = false;
+            if(!bound){
+                Log.i(TAG, "Binding StepCounterService");
+                activity.bindService(stepCounterIntent, mConnection, Context.BIND_AUTO_CREATE);
+            }else{
+                Log.i(TAG, "StepCounterService already binded");
+            }
+
+        }
+        else if (ACTION_STOP.equals(action)) {
+            if(pActive) {
+                Log.i(TAG, "Stopping StepCounterService");
+                this.setPedometerIsActive(sharedPref, false);
+                activity.stopService(stepCounterIntent);
+            }else {
+                Log.i(TAG, "StepCounterService already stopped");
+            }
+
+            if (bound) {
+                Log.i(TAG, "Unbinding StepCounterService");
+                activity.unbindService(mConnection);
+            } else{
+                Log.i(TAG, "StepCounterService already unbinded");
+            }
+
             activity.stopService(stepCounterIntent);
         }
         else if (ACTION_GET_STEPS.equals(action)) {
-            if (isEnabled && bound) {
+            if (pActive && bound) {
                 Integer steps = stepCounterService.getStepsCounted();
                 Log.i(TAG, "Geting steps counted from stepCounterService: " + steps);
                 callbackContext.success(steps);
@@ -125,9 +166,8 @@ public class CordovaStepCounter extends CordovaPlugin {
             }
         }
         else if (ACTION_GET_TODAY_STEPS.equals(action)) {
-            SharedPreferences sharedPref = activity.getSharedPreferences("UserData", Context.MODE_PRIVATE);
-            if(sharedPref.contains("pedometerData")){
-                String pDataString = sharedPref.getString("pedometerData", "{}");
+            if(sharedPref.contains(PEDOMETER_HISTORY_PREF)){
+                String pDataString = sharedPref.getString(PEDOMETER_HISTORY_PREF, "{}");
 
                 Date currentDate = new Date();
                 SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
@@ -160,9 +200,8 @@ public class CordovaStepCounter extends CordovaPlugin {
             }
         }
         else if(ACTION_GET_HISTORY.equals(action)){
-            SharedPreferences sharedPref = activity.getSharedPreferences("UserData", Context.MODE_PRIVATE);
-            if(sharedPref.contains("pedometerData")){
-                String pDataString = sharedPref.getString("pedometerData","{}");
+            if(sharedPref.contains(PEDOMETER_HISTORY_PREF)){
+                String pDataString = sharedPref.getString(PEDOMETER_HISTORY_PREF,"{}");
                 Log.i(TAG, "Getting steps history from stepCounterService: " + pDataString);
                 callbackContext.success(pDataString);
             }else{
@@ -193,8 +232,21 @@ public class CordovaStepCounter extends CordovaPlugin {
         if(bound){
             Activity activity = this.cordova.getActivity();
             activity.unbindService(mConnection);
-            bound = false;
         }
         super.onDestroy();
+    }
+
+    //Getter / Setter for pedometerActive preferences
+    public static boolean getPedometerIsActive(SharedPreferences sharedPref){
+        Boolean pActive = false;
+        if(sharedPref.contains(PEDOMETER_ACTIVE_PREF)) {
+            pActive = sharedPref.getBoolean(PEDOMETER_ACTIVE_PREF, false);
+        }
+        return pActive;
+    }
+    protected static void setPedometerIsActive(SharedPreferences sharedPref, Boolean newValue){
+        SharedPreferences.Editor sharedPrefEditor = sharedPref.edit();
+        sharedPrefEditor.putBoolean(CordovaStepCounter.PEDOMETER_ACTIVE_PREF, newValue);
+        sharedPrefEditor.commit();
     }
 }

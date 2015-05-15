@@ -62,11 +62,11 @@ public class StepCounterService extends Service implements SensorEventListener {
         return stepsCounted;
     }
 
-    public void stopTracking() {
+    /*public void stopTracking() {
         Log.i(TAG, "Setting isRunning flag to false");
         isRunning = false;
         mSensorManager.unregisterListener(this);
-    }
+    }*/
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -93,13 +93,21 @@ public class StepCounterService extends Service implements SensorEventListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "onStartCommand");
 
-        //@TODO should test if startCommand is from autolaunch on boot -> then if yes, check if CordovaStepCounter.ACTION_START has really been called or die
+        SharedPreferences sharedPref = getSharedPreferences(CordovaStepCounter.USER_DATA_PREF, Context.MODE_PRIVATE);
+        Boolean pActive = CordovaStepCounter.getPedometerIsActive(sharedPref);
+
+        //Service should not be activated (pedometer stopped by user)
+        if(!pActive) {
+            Log.i(TAG, "/!\\ onStartCommand Ask to stopSelf, should not be launched ! Should not even be here (maybe 4.4.2 specific bug causes a restart here)");
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+
         Log.i(TAG, "- Relaunch service in 1 hour (4.4.2 start_sticky bug ) : ");
         Intent newServiceIntent = new Intent(this,StepCounterService.class);
         AlarmManager aManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         PendingIntent stepIntent = PendingIntent.getService(getApplicationContext(), 10, newServiceIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         //PendingIntent.GetService (ApplicationContext, 10, intent2, PendingIntentFlags.UpdateCurrent);
-
         aManager.set(AlarmManager.RTC, java.lang.System.currentTimeMillis() + 1000 * 60 * 60, stepIntent);
 
 
@@ -132,16 +140,22 @@ public class StepCounterService extends Service implements SensorEventListener {
         //Stop listening to events when stop() is called
         if(isRunning){
             mSensorManager.unregisterListener(this);
+            isRunning = false;
         }
 
-        isRunning = false;
+        SharedPreferences sharedPref = getSharedPreferences(CordovaStepCounter.USER_DATA_PREF, Context.MODE_PRIVATE);
+        Boolean pActive = CordovaStepCounter.getPedometerIsActive(sharedPref);
+        if(pActive) {
+            Log.i(TAG, "- Relaunch service in 500ms" );
+            //Autorelaunch the service
+            //@TODO should test if stopService is called from killing app or from calling stop() method in CordovaStepCounter
+            Intent newServiceIntent = new Intent(this,StepCounterService.class);
+            AlarmManager aManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            aManager.set(AlarmManager.RTC, java.lang.System.currentTimeMillis() + 500, PendingIntent.getService(this,11,newServiceIntent,0));
+        }else{
+            Log.i(TAG, "StepCounter stopped, will not relaunch service" );
+        }
 
-        Log.i(TAG, "- Relaunch service in 500ms" );
-        //Autorelaunch the service
-        //@TODO should test if stopService is called from killing app or from calling stop() method in CordovaStepCounter
-        Intent newServiceIntent = new Intent(this,StepCounterService.class);
-        AlarmManager aManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        aManager.set(AlarmManager.RTC, java.lang.System.currentTimeMillis() + 500, PendingIntent.getService(this,11,newServiceIntent,0));
 
         return super.stopService(intent);
     }
@@ -159,13 +173,13 @@ public class StepCounterService extends Service implements SensorEventListener {
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
 
         String currentDateString = dateFormatter.format(currentDate);
-        SharedPreferences sharedPref = getSharedPreferences("UserData", Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = getSharedPreferences(CordovaStepCounter.USER_DATA_PREF, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
 
         JSONObject pData = new JSONObject();
         JSONObject dayData = new JSONObject();
-        if(sharedPref.contains("pedometerData")){
-            String pDataString = sharedPref.getString("pedometerData","{}");
+        if(sharedPref.contains(CordovaStepCounter.PEDOMETER_HISTORY_PREF)){
+            String pDataString = sharedPref.getString(CordovaStepCounter.PEDOMETER_HISTORY_PREF,"{}");
             try{
                 pData = new JSONObject(pDataString);
                 Log.d(TAG," got json shared prefs "+pData.toString());
@@ -222,7 +236,7 @@ public class StepCounterService extends Service implements SensorEventListener {
         }catch (JSONException err){
             Log.e(TAG,"Exception while setting int in JSON for "+currentDateString);
         }
-        editor.putString("pedometerData",pData.toString());
+        editor.putString(CordovaStepCounter.PEDOMETER_HISTORY_PREF,pData.toString());
         editor.commit();
     }
 
