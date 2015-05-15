@@ -27,16 +27,21 @@ package net.texh.cordovapluginstepcounter;
 import org.apache.cordova.*;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class CordovaStepCounter extends CordovaPlugin {
 
@@ -47,6 +52,8 @@ public class CordovaStepCounter extends CordovaPlugin {
     private final String ACTION_STOP             = "stop";
     private final String ACTION_GET_STEPS        = "get_step_count";
     private final String ACTION_CAN_COUNT_STEPS  = "can_count_steps";
+    private final String ACTION_GET_HISTORY      = "get_history";
+
 
     private Intent  stepCounterIntent;
     private Boolean isEnabled    = false;
@@ -89,9 +96,9 @@ public class CordovaStepCounter extends CordovaPlugin {
 
             Log.i(TAG, "Starting StepCounterService");
             isEnabled = true;
-            stepCounterIntent.putExtra("beginningOffset", beginningOffset);
-            activity.bindService(stepCounterIntent, mConnection, Context.BIND_AUTO_CREATE);
+            //stepCounterIntent.putExtra("beginningOffset", beginningOffset);
             activity.startService(stepCounterIntent);
+            activity.bindService(stepCounterIntent, mConnection, Context.BIND_AUTO_CREATE);
         }
         else if (ACTION_STOP.equals(action)) {
             Log.i(TAG, "Stopping StepCounterService");
@@ -107,15 +114,52 @@ public class CordovaStepCounter extends CordovaPlugin {
             activity.stopService(stepCounterIntent);
         }
         else if (ACTION_GET_STEPS.equals(action)) {
-            if (isEnabled && bound) {
-                Integer steps = stepCounterService.getStepsCounted();
-                Log.i(TAG, "Geting steps counted from stepCounterService: " + steps);
-                callbackContext.success(steps);
-            } else {
-                Log.i(TAG, "Can't get steps from stepCounterService as we're not enabled / bound - returning 0");
-                callbackContext.success(0);
+            SharedPreferences sharedPref = activity.getSharedPreferences("UserData", Context.MODE_PRIVATE);
+            if(sharedPref.contains("pedometerData")){
+                String pDataString = sharedPref.getString("pedometerData", "{}");
+
+                Date currentDate = new Date();
+                SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+                String currentDateString = dateFormatter.format(currentDate);
+
+                JSONObject pData = new JSONObject();
+                JSONObject dayData = new JSONObject();
+                Integer daySteps = -1;
+                try{
+                    pData = new JSONObject(pDataString);
+                    Log.d(TAG," got json shared prefs "+pData.toString());
+                }catch (JSONException err){
+                    Log.d(TAG," Exception while parsing json string : "+pDataString);
+                }
+
+                if(pData.has(currentDateString)){
+                    try {
+                        dayData = pData.getJSONObject(currentDateString);
+                        daySteps = dayData.getInt("steps");
+                    }catch(JSONException err){
+                        Log.e(TAG,"Exception while getting Object from JSON for "+currentDateString);
+                    }
+                }
+
+                Log.i(TAG, "Getting steps for today: " + daySteps);
+                callbackContext.success(daySteps);
+            }else{
+                Log.i(TAG, "No steps history found in stepCounterService !");
+                callbackContext.success(-1);
             }
-        } else {
+        }
+        else if(ACTION_GET_HISTORY.equals(action)){
+            SharedPreferences sharedPref = activity.getSharedPreferences("UserData", Context.MODE_PRIVATE);
+            if(sharedPref.contains("pedometerData")){
+                String pDataString = sharedPref.getString("pedometerData","{}");
+                Log.i(TAG, "Getting steps history from stepCounterService: " + pDataString);
+                callbackContext.success(pDataString);
+            }else{
+                Log.i(TAG, "No steps history found in stepCounterService !");
+                callbackContext.success("{}");
+            }
+        }
+        else {
             Log.e(TAG, "Invalid action called on class " + TAG + ", " + action);
             callbackContext.error("Invalid action called on class " + TAG + ", " + action);
         }
@@ -133,4 +177,13 @@ public class CordovaStepCounter extends CordovaPlugin {
                 && pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_DETECTOR);
     }
 
+    @Override
+    public void onDestroy() {
+        if(bound){
+            Activity activity = this.cordova.getActivity();
+            activity.unbindService(mConnection);
+            bound = false;
+        }
+        super.onDestroy();
+    }
 }
