@@ -194,7 +194,7 @@ public class StepCounterService extends Service implements SensorEventListener {
             haveSetOffset = false;
         }
 
-        Log.i(TAG, "BEFORE * steps:"+steps+" * daySteps :"+ daySteps+" * stepCounted :"+stepsCounted+" * dayOffset :"+dayOffset );
+
 
         //Counter += 1
         stepsCounted += 1;
@@ -202,7 +202,7 @@ public class StepCounterService extends Service implements SensorEventListener {
         //If offset has not been set or if saved offset is greater than today offset
         if (!haveSetOffset) {
             //Change offset for current count
-            dayOffset = - daySteps;
+            dayOffset = steps - daySteps;
             //Add one to steps (=1 if offset not set, or +1 if steps count has been resetted by a phone restart)
             haveSetOffset = true;
             Log.i(TAG, "  * Updated offset: " + dayOffset);
@@ -211,7 +211,7 @@ public class StepCounterService extends Service implements SensorEventListener {
         //First 'steps' is 0 an not 1
         daySteps = (steps+1) - dayOffset;
         //Log all this
-        Log.i(TAG, "AFTER  * daySteps :"+ daySteps+" * stepCounted :"+stepsCounted+" * dayOffset :"+dayOffset );
+        Log.i(TAG, "** daySteps :"+ daySteps+" ** stepCounted :"+stepsCounted);
 
 
         //Save calculated values to SharedPreferences
