@@ -174,6 +174,7 @@ public class StepCounterService extends Service implements SensorEventListener {
             try {
                 dayData = pData.getJSONObject(currentDateString);
                 dayOffset = dayData.getInt("offset");
+                daySteps = dayData.getInt("steps");
                 haveSetOffset = true;
                 offset = dayOffset;
             }catch(JSONException err){
@@ -183,14 +184,17 @@ public class StepCounterService extends Service implements SensorEventListener {
             haveSetOffset = false;
         }
 
-        if (!haveSetOffset) {
-            offset        = steps - 1;
+        //If offset has not been set or if saved offset is greater than today offset
+        if (!haveSetOffset || steps < offset) {
+            //Change offset for current count
+            offset    = steps - 1;
             dayOffset = offset;
-            stepsCounted  = 1;
+            //Add one to steps (=1 if offset not set, or +1 if steps count has been resetted by a phone restart)
+            daySteps = daySteps + 1;
             haveSetOffset = true;
             Log.i(TAG, "  * Updated offset: " + offset);
         } else {
-            stepsCounted = steps - offset;
+            daySteps = steps - offset;
             Log.i(TAG, "  * stepsCounted:"+ stepsCounted);
         }
 
