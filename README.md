@@ -64,6 +64,12 @@ Run the code
 
     cordova run
     
+## Known Issues
+
+ - The service auto-start on device BOOT, even if START command has never been called
+ - The service won't really stop even if STOP command is called (will auto-restart)
+ - The master count (getStepCount) should return the nb steps since START command has been sent, Todat : if service is killed it might restart to 0. 
+    
 ## Changes in 0.0.4
 
 Added : Re-integrated support for getStepCount which return the step counted since app is started
