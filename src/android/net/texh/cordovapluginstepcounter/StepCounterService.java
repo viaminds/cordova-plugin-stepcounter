@@ -55,9 +55,7 @@ public class StepCounterService extends Service implements SensorEventListener {
 
     private SensorManager mSensorManager;
     private Sensor        mStepSensor;
-    private Integer       offset          = 0;
     private Integer       stepsCounted    = 0;
-    //private Integer       beginningOffset = 0;
     private Boolean       haveSetOffset   = false;
 
     public Integer getStepsCounted() {
@@ -94,6 +92,8 @@ public class StepCounterService extends Service implements SensorEventListener {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "onStartCommand");
+
+        //@TODO should test if startCommand is from autolaunch on boot -> then if yes, check if CordovaStepCounter.ACTION_START has really been called or die
         Log.i(TAG, "- Relaunch service in 1 hour (4.4.2 start_sticky bug ) : ");
         Intent newServiceIntent = new Intent(this,StepCounterService.class);
         AlarmManager aManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
@@ -119,7 +119,6 @@ public class StepCounterService extends Service implements SensorEventListener {
     public void doInit() {
         Log.i(TAG, "Registering STEP_DETECTOR sensor");
         stepsCounted  = 0;
-        offset        = 0;
         haveSetOffset = false;
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -130,6 +129,7 @@ public class StepCounterService extends Service implements SensorEventListener {
     @Override
     public boolean stopService(Intent intent) {
         Log.i(TAG, "- Received stop: " + intent);
+        //Stop listening to events when stop() is called
         if(isRunning){
             mSensorManager.unregisterListener(this);
         }
@@ -137,6 +137,8 @@ public class StepCounterService extends Service implements SensorEventListener {
         isRunning = false;
 
         Log.i(TAG, "- Relaunch service in 500ms" );
+        //Autorelaunch the service
+        //@TODO should test if stopService is called from killing app or from calling stop() method in CordovaStepCounter
         Intent newServiceIntent = new Intent(this,StepCounterService.class);
         AlarmManager aManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         aManager.set(AlarmManager.RTC, java.lang.System.currentTimeMillis() + 500, PendingIntent.getService(this,11,newServiceIntent,0));
@@ -148,6 +150,8 @@ public class StepCounterService extends Service implements SensorEventListener {
     public void onSensorChanged(SensorEvent sensorEvent) {
         //Log.i(TAG, "onSensorChanged event!");
         Integer steps = Math.round(sensorEvent.values[0]);
+
+
         Integer daySteps = 0;
         Integer dayOffset = 0;
 
@@ -170,36 +174,47 @@ public class StepCounterService extends Service implements SensorEventListener {
             }
         }
 
+        //Get the datas previously stored for today
         if(pData.has(currentDateString)){
             try {
                 dayData = pData.getJSONObject(currentDateString);
                 dayOffset = dayData.getInt("offset");
                 daySteps = dayData.getInt("steps");
                 haveSetOffset = true;
-                offset = dayOffset;
+
+                //If steps is less thant dayOffset, means that dayOffset is not correct (due to reboot in the middle of the day)
+                if(steps < dayOffset){
+                    haveSetOffset = false;
+                }
             }catch(JSONException err){
                 Log.e(TAG,"Exception while getting Object from JSON for "+currentDateString);
             }
         }else{
+            // If there is no data, we will have to save offset
             haveSetOffset = false;
         }
 
+        Log.i(TAG, "BEFORE * steps:"+steps+" * daySteps :"+ daySteps+" * stepCounted :"+stepsCounted+" * dayOffset :"+dayOffset );
+
+        //Counter += 1
+        stepsCounted += 1;
+
         //If offset has not been set or if saved offset is greater than today offset
-        if (!haveSetOffset || steps < offset) {
+        if (!haveSetOffset) {
             //Change offset for current count
-            offset    = steps - 1;
-            dayOffset = offset;
+            dayOffset = - daySteps;
             //Add one to steps (=1 if offset not set, or +1 if steps count has been resetted by a phone restart)
-            daySteps = daySteps + 1;
             haveSetOffset = true;
-            Log.i(TAG, "  * Updated offset: " + offset);
-        } else {
-            daySteps = steps - offset;
-            Log.i(TAG, "  * stepsCounted:"+ stepsCounted);
+            Log.i(TAG, "  * Updated offset: " + dayOffset);
         }
 
-        daySteps = stepsCounted;
+        //First 'steps' is 0 an not 1
+        daySteps = (steps+1) - dayOffset;
+        //Log all this
+        Log.i(TAG, "AFTER  * daySteps :"+ daySteps+" * stepCounted :"+stepsCounted+" * dayOffset :"+dayOffset );
 
+
+        //Save calculated values to SharedPreferences
         try{
             dayData.put("steps",daySteps);
             dayData.put("offset",dayOffset);
