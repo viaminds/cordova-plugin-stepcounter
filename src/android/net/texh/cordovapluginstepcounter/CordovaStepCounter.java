@@ -51,6 +51,7 @@ public class CordovaStepCounter extends CordovaPlugin {
     private final String ACTION_START            = "start";
     private final String ACTION_STOP             = "stop";
     private final String ACTION_GET_STEPS        = "get_step_count";
+    private final String ACTION_GET_TODAY_STEPS  = "get_today_step_count";
     private final String ACTION_CAN_COUNT_STEPS  = "can_count_steps";
     private final String ACTION_GET_HISTORY      = "get_history";
 
@@ -114,6 +115,16 @@ public class CordovaStepCounter extends CordovaPlugin {
             activity.stopService(stepCounterIntent);
         }
         else if (ACTION_GET_STEPS.equals(action)) {
+            if (isEnabled && bound) {
+                Integer steps = stepCounterService.getStepsCounted();
+                Log.i(TAG, "Geting steps counted from stepCounterService: " + steps);
+                callbackContext.success(steps);
+            } else {
+                Log.i(TAG, "Can't get steps from stepCounterService as we're not enabled / bound - returning 0");
+                callbackContext.success(0);
+            }
+        }
+        else if (ACTION_GET_TODAY_STEPS.equals(action)) {
             SharedPreferences sharedPref = activity.getSharedPreferences("UserData", Context.MODE_PRIVATE);
             if(sharedPref.contains("pedometerData")){
                 String pDataString = sharedPref.getString("pedometerData", "{}");
