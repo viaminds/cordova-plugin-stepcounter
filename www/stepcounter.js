@@ -48,6 +48,9 @@ module.exports = {
     },
 
     getHistory: function (successCallback, errorCallback) {
-        cordova.exec(successCallback, errorCallback, "CordovaStepCounter", "get_history", []);
+        cordova.exec(function(result){
+          var parsedResult = JSON.parse(result);  
+          successCallback(parsedResult);
+        },errorCallback, "CordovaStepCounter", "get_history", []);
     }
 };

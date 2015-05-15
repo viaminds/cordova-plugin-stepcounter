@@ -10,7 +10,7 @@ Create a new Cordova Project
 Install the plugin
 
     $ cd hello
-    $ cordova plugin add https://github.com/Slidee/cordova-plugin-stepcounter.git
+    $ cordova plugin add https://github.com/texh/cordova-plugin-stepcounter.git
     
 
 Edit `www/js/index.html` and add the following code inside `onDeviceReady`
@@ -40,7 +40,7 @@ Edit `www/js/index.html` and add the following code inside `onDeviceReady`
     // Returns true/false if Android device is running >API level 19 && has the step counter API available
     stepcounter.deviceCanCountSteps(success, failure);
 
-    // Get the step history (JSON formatted)
+    // Get the step history (JavaScript object)
     // sample result :
     //{
     //  "2015-01-01":{"offset": 123, "steps": 456},
@@ -48,9 +48,8 @@ Edit `www/js/index.html` and add the following code inside `onDeviceReady`
     //  ...
     //}
     stepcounter.getHistory(
-        function(result){
-            success(result);
-            var historyData = JSON.parse(result);
+        function(historyData){
+            success(historyData);
         },
         failure
     );
@@ -64,6 +63,10 @@ Install Android platform
 Run the code
 
     cordova run
+
+## Changes in 0.0.3
+
+getHistory() and getStepCount() return parsed JSON objects.
 
 ## Changes in 0.0.2
 
@@ -92,4 +95,5 @@ For more info on plugins see the [Plugin Development Guide](http://cordova.apach
 
 ## Todo / Work in progress
 
-It should be intersting to merge this plugin with an ios compatible plugin such as [leecrossley/cordova-plugin-pedometer](https://github.com/leecrossley/cordova-plugin-pedometer)
+It should be interesting to merge this plugin with an ios compatible plugin such as [leecrossley/cordova-plugin-pedometer](https://github.com/leecrossley/cordova-plugin-pedometer).
+We should look into changing the interface of this plugin for v0.1.0 release to match that of [leecrossley/cordova-plugin-pedometer](https://github.com/leecrossley/cordova-plugin-pedometer) as closely as possible so as to be able to work towards this in the future.
