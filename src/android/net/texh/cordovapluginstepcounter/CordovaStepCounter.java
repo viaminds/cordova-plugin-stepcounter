@@ -47,7 +47,7 @@ public class CordovaStepCounter extends CordovaPlugin {
 
     private final String TAG = "CordovaStepCounter";
 
-    //private final String ACTION_CONFIGURE      = "configure";
+    //private final String ACTION_CONFIGURE        = "configure";
     private final String ACTION_START            = "start";
     private final String ACTION_STOP             = "stop";
     private final String ACTION_GET_STEPS        = "get_step_count";
@@ -136,6 +136,7 @@ public class CordovaStepCounter extends CordovaPlugin {
                 Log.i(TAG, "StepCounterService already binded");
             }
 
+            callbackContext.success(0);
         }
         else if (ACTION_STOP.equals(action)) {
             if(pActive) {
@@ -154,6 +155,7 @@ public class CordovaStepCounter extends CordovaPlugin {
             }
 
             activity.stopService(stepCounterIntent);
+            callbackContext.success(0);
         }
         else if (ACTION_GET_STEPS.equals(action)) {
             if (pActive && bound) {
