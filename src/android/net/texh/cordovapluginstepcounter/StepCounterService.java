@@ -55,12 +55,7 @@ public class StepCounterService extends Service implements SensorEventListener {
 
     private SensorManager mSensorManager;
     private Sensor        mStepSensor;
-    private Integer       stepsCounted    = 0;
     private Boolean       haveSetOffset   = false;
-
-    public Integer getStepsCounted() {
-        return stepsCounted;
-    }
 
     /*public void stopTracking() {
         Log.i(TAG, "Setting isRunning flag to false");
@@ -126,7 +121,6 @@ public class StepCounterService extends Service implements SensorEventListener {
 
     public void doInit() {
         Log.i(TAG, "Registering STEP_DETECTOR sensor");
-        stepsCounted  = 0;
         haveSetOffset = false;
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -163,9 +157,8 @@ public class StepCounterService extends Service implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         //Log.i(TAG, "onSensorChanged event!");
+        Integer totalSteps = 0;
         Integer steps = Math.round(sensorEvent.values[0]);
-
-
         Integer daySteps = 0;
         Integer dayOffset = 0;
 
@@ -211,7 +204,9 @@ public class StepCounterService extends Service implements SensorEventListener {
 
 
         //Counter += 1
+        Integer stepsCounted = CordovaStepCounter.getTotalCount(sharedPref);
         stepsCounted += 1;
+        CordovaStepCounter.setTotalCount(sharedPref,stepsCounted);
 
         //If offset has not been set or if saved offset is greater than today offset
         if (!haveSetOffset) {

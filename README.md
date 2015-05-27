@@ -37,7 +37,7 @@ Edit `www/js/index.html` and add the following code inside `onDeviceReady`
     // Get the amount of steps for today (or -1 if it no data given)
     stepcounter.getTodayStepCount(success, failure);
     
-    // Get the amount of steps since the service is started (it is actually reseted to 0 when the service is killed by the system)
+    // Get the amount of steps since the start command has been called
     stepcounter.getStepCount(success, failure);
 
     // Returns true/false if Android device is running >API level 19 && has the step counter API available
@@ -69,8 +69,15 @@ Run the code
     
 ## Known Issues
 
- - The master count (getStepCount) should return the nb steps since START command has been sent, Todat : if service is killed it might restart to 0. 
- 
+No issues found for the moment, you can check the todo list below for enhancement that are waiting
+
+## Changes in 0.0.6
+
+The getStepCount method now returns the nb steps since START command has been called.
+When calling START, count go back to 0.
+
+Fixed :  The master count (getStepCount) should return the nb steps since START command has been sent, Todat : if service is killed it might restart to 0.
+
 ## Changes in 0.0.5
 
 The "isEnabled" Property is now an app preference so the service and boot handler can use it even if app is killed.
