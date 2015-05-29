@@ -201,8 +201,6 @@ public class StepCounterService extends Service implements SensorEventListener {
             haveSetOffset = false;
         }
 
-
-
         //Counter += 1
         Integer stepsCounted = CordovaStepCounter.getTotalCount(sharedPref);
         stepsCounted += 1;

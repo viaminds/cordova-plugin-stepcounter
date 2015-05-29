@@ -40,8 +40,6 @@ import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.oracle.javafx.jmx.json.JSONException;
-
 import java.lang.Integer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -144,7 +142,7 @@ public class CordovaStepCounter extends CordovaPlugin {
             //Try getting given param (starting value)
             Integer startingValue = 0;
             try{
-                if(data.length > 0){
+                if(data.length() > 0){
                     startingValue = data.getInt(0);
                 }
             }catch(JSONException error){
@@ -177,14 +175,13 @@ public class CordovaStepCounter extends CordovaPlugin {
             callbackContext.success(currentCount);
         }
         else if (ACTION_GET_STEPS.equals(action)) {
-            if (pActive && bound) {
-                Integer steps = CordovaStepCounter.getTotalCount(sharedPref);
-                Log.i(TAG, "Geting steps counted from stepCounterService: " + steps);
-                callbackContext.success(steps);
-            } else {
-                Log.i(TAG, "Can't get steps from stepCounterService as we're not enabled / bound - returning Error");
-                callbackContext.error("Pedometer has not been started, cannot getCount");
+            if(!pActive){
+                Log.i(TAG, "Be Careful you're getting a Step count with inactive Pedometer");
             }
+
+            Integer steps = CordovaStepCounter.getTotalCount(sharedPref);
+            Log.i(TAG, "Geting steps counted from stepCounterService: " + steps);
+            callbackContext.success(steps);
         }
         else if (ACTION_GET_TODAY_STEPS.equals(action)) {
             if(sharedPref.contains(PEDOMETER_HISTORY_PREF)){
@@ -275,13 +272,13 @@ public class CordovaStepCounter extends CordovaPlugin {
     public static int getTotalCount(SharedPreferences sharedPref){
         Integer totalCount = 0;
         if(sharedPref.contains(CordovaStepCounter.PEDOMETER_TOTAL_COUNT_PREF)) {
-            totalCount = sharedPref.getBoolean(CordovaStepCounter.PEDOMETER_TOTAL_COUNT_PREF, 0);
+            totalCount = sharedPref.getInt(CordovaStepCounter.PEDOMETER_TOTAL_COUNT_PREF, 0);
         }
         return totalCount;
     }
     protected static void setTotalCount(SharedPreferences sharedPref, Integer newValue){
         SharedPreferences.Editor sharedPrefEditor = sharedPref.edit();
-        sharedPrefEditor.putBoolean(CordovaStepCounter.PEDOMETER_TOTAL_COUNT_PREF, newValue);
+        sharedPrefEditor.putInt(CordovaStepCounter.PEDOMETER_TOTAL_COUNT_PREF, newValue);
         sharedPrefEditor.commit();
     }
 }
