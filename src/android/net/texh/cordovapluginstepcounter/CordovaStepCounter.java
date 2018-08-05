@@ -264,8 +264,7 @@ public class CordovaStepCounter extends CordovaPlugin {
     }
     protected static void setPedometerIsActive(SharedPreferences sharedPref, Boolean newValue){
         SharedPreferences.Editor sharedPrefEditor = sharedPref.edit();
-		sharedPrefEditor.clear();
-        sharedPrefEditor.putBoolean(CordovaStepCounter.PEDOMETER_ACTIVE_PREF, newValue);
+	    sharedPrefEditor.putBoolean(CordovaStepCounter.PEDOMETER_ACTIVE_PREF, newValue);
         sharedPrefEditor.commit();
     }
 
@@ -279,8 +278,7 @@ public class CordovaStepCounter extends CordovaPlugin {
     }
     protected static void setTotalCount(SharedPreferences sharedPref, Integer newValue){
         SharedPreferences.Editor sharedPrefEditor = sharedPref.edit();
-		sharedPrefEditor.clear();
-        sharedPrefEditor.putInt(CordovaStepCounter.PEDOMETER_TOTAL_COUNT_PREF, newValue);
+	    sharedPrefEditor.putInt(CordovaStepCounter.PEDOMETER_TOTAL_COUNT_PREF, newValue);
         sharedPrefEditor.commit();
     }
 }
