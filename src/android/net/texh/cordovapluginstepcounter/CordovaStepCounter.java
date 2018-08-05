@@ -266,7 +266,7 @@ public class CordovaStepCounter extends CordovaPlugin {
         SharedPreferences.Editor sharedPrefEditor = sharedPref.edit();
 		sharedPrefEditor.clear();
         sharedPrefEditor.putBoolean(CordovaStepCounter.PEDOMETER_ACTIVE_PREF, newValue);
-        sharedPrefEditor.apply();
+        sharedPrefEditor.commit();
     }
 
     //Getter / Setter for TotalCount preferences
@@ -281,6 +281,6 @@ public class CordovaStepCounter extends CordovaPlugin {
         SharedPreferences.Editor sharedPrefEditor = sharedPref.edit();
 		sharedPrefEditor.clear();
         sharedPrefEditor.putInt(CordovaStepCounter.PEDOMETER_TOTAL_COUNT_PREF, newValue);
-        sharedPrefEditor.apply();
+        sharedPrefEditor.commit();
     }
 }

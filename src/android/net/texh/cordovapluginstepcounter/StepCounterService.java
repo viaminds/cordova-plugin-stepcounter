@@ -168,6 +168,7 @@ public class StepCounterService extends Service implements SensorEventListener {
         String currentDateString = dateFormatter.format(currentDate);
         SharedPreferences sharedPref = getSharedPreferences(CordovaStepCounter.USER_DATA_PREF, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
+		editor.clear(); 
 
         JSONObject pData = new JSONObject();
         JSONObject dayData = new JSONObject();
