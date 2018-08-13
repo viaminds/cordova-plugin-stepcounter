@@ -125,7 +125,7 @@ public class StepCounterService extends Service implements SensorEventListener {
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mStepSensor    = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-        mSensorManager.registerListener(this, mStepSensor, SensorManager.SENSOR_DELAY_FASTEST);
+        mSensorManager.registerListener(this, mStepSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
@@ -156,7 +156,7 @@ public class StepCounterService extends Service implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        //Log.i(TAG, "onSensorChanged event!");
+        Log.i(TAG, "onSensorChanged event!");
         Integer totalSteps = 0;
         Integer steps = Math.round(sensorEvent.values[0]);
         Integer daySteps = 0;

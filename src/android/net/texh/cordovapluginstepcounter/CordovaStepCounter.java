@@ -89,12 +89,14 @@ public class CordovaStepCounter extends CordovaPlugin {
         SharedPreferences sharedPref = activity.getSharedPreferences(USER_DATA_PREF, Context.MODE_PRIVATE);
         Boolean pActive = this.getPedometerIsActive(sharedPref);
         if(pActive){
+            Log.i(TAG, "NO está activo el servicio: ");
             if(stepCounterIntent == null){
                 stepCounterIntent = new Intent(activity, StepCounterService.class);
                 activity.startService(stepCounterIntent);
             }
 
             if(!bound){
+                Log.i(TAG, "Hacemos bound: ");
                 activity.bindService(stepCounterIntent, mConnection, Context.BIND_AUTO_CREATE);
             }
 
