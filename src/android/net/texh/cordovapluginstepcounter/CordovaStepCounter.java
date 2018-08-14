@@ -52,6 +52,8 @@ public class CordovaStepCounter extends CordovaPlugin {
     private final String ACTION_START            = "start";
     private final String ACTION_STOP             = "stop";
     private final String ACTION_GET_STEPS        = "get_step_count";
+	private final String ACTION_GET_TEMP        = "get_temp_count";
+	private final String ACTION_RESET_TEMP      = "set_reset_temp";
     private final String ACTION_GET_TODAY_STEPS  = "get_today_step_count";
     private final String ACTION_CAN_COUNT_STEPS  = "can_count_steps";
     private final String ACTION_GET_HISTORY      = "get_history";
@@ -185,6 +187,22 @@ public class CordovaStepCounter extends CordovaPlugin {
             Log.i(TAG, "Geting steps counted from stepCounterService: " + steps);
             callbackContext.success(steps);
         }
+		 else if (ACTION_GET_TEMP.equals(action)) {
+           
+		   if(!pActive){
+                Log.i(TAG, "Be Careful you're getting a Step count with inactive Pedometer");
+            }
+
+            Integer steps = CordovaStepCounter.getTempCount(sharedPref);
+            Log.i(TAG, "Getting temp values : " + steps);
+            callbackContext.success(steps);
+        }
+		 else if (ACTION_RESET_TEMP.equals(action)) {
+           
+		     CordovaStepCounter.resetTempCount(sharedPref);
+            Log.i(TAG, "Resetting temp values : " );
+            callbackContext.success(0);
+        }
         else if (ACTION_GET_TODAY_STEPS.equals(action)) {
             if(sharedPref.contains(PEDOMETER_HISTORY_PREF)){
                 String pDataString = sharedPref.getString(PEDOMETER_HISTORY_PREF, "{}");
@@ -278,9 +296,28 @@ public class CordovaStepCounter extends CordovaPlugin {
         }
         return totalCount;
     }
+	    public static int getTempCount(SharedPreferences sharedPref){
+        Integer totalCount = 0;
+        if(sharedPref.contains(CordovaStepCounter.PEDOMETER_TEMP_COUNT_PREF)) {
+            totalCount = sharedPref.getInt(CordovaStepCounter.PEDOMETER_TEMP_COUNT_PREF, 0);
+        }
+        return totalCount;
+    }
     protected static void setTotalCount(SharedPreferences sharedPref, Integer newValue){
         SharedPreferences.Editor sharedPrefEditor = sharedPref.edit();
 	    sharedPrefEditor.putInt(CordovaStepCounter.PEDOMETER_TOTAL_COUNT_PREF, newValue);
         sharedPrefEditor.commit();
     }
+	protected static void setTempCount(SharedPreferences sharedPref, Integer newValue){
+        SharedPreferences.Editor sharedPrefEditor = sharedPref.edit();
+	    sharedPrefEditor.putInt(CordovaStepCounter.PEDOMETER_TEMP_COUNT_PREF, newValue);
+        sharedPrefEditor.commit();
+    }
+
+	public static void resetTempCount(SharedPreferences sharedPref){
+        SharedPreferences.Editor sharedPrefEditor = sharedPref.edit();
+	    sharedPrefEditor.putInt(CordovaStepCounter.PEDOMETER_TEMP_COUNT_PREF, 0);
+        sharedPrefEditor.commit();
+    }
+
 }

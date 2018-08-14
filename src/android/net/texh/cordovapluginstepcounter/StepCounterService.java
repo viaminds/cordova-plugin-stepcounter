@@ -206,6 +206,11 @@ public class StepCounterService extends Service implements SensorEventListener {
         stepsCounted += 1;
         CordovaStepCounter.setTotalCount(sharedPref,stepsCounted);
 
+		Integer stepsTemp = CordovaStepCounter.getTempCount(sharedPref);
+        stepsTemp += 1;
+        CordovaStepCounter.setTempCount(sharedPref,stepsTemp);
+		Log.i(TAG, "Anotados pasos temporales: " + stepsTemp);
+
         //If offset has not been set or if saved offset is greater than today offset
         if (!haveSetOffset) {
             //Change offset for current count
