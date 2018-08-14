@@ -62,6 +62,7 @@ public class CordovaStepCounter extends CordovaPlugin {
     public static final String PEDOMETER_HISTORY_PREF      = "pedometerData";
     public static final String PEDOMETER_ACTIVE_PREF       = "pedometerActive";
     public static final String PEDOMETER_TOTAL_COUNT_PREF        = "pedometerTotalCount";
+	public static final String PEDOMETER_TEMP_COUNT_PREF        = "pedometerTempCount";
 
 
     private Intent  stepCounterIntent;
