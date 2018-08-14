@@ -26,7 +26,9 @@ module.exports = {
     //ACTION_CONFIGURE       : "configure",
     ACTION_START           : "start",
     ACTION_STOP            : "stop",
-    ACTION_GET_STEPS       : "get_step_count",
+    ACTION_GET_STEPS: "get_step_count",
+    ACTION_GET_TEMP: "get_temp_count",
+    ACTION_RESET_TEMP: "set_reset_temp",
     ACTION_TODAY_GET_STEPS : "get_today_step_count",
     ACTION_CAN_COUNT_STEPS : "can_count_steps",
     ACTION_GET_HISTORY     : "get_history",
@@ -46,6 +48,12 @@ module.exports = {
 
     getStepCount: function (successCallback, errorCallback) {
         cordova.exec(successCallback, errorCallback, "CordovaStepCounter", "get_step_count", []);
+    },
+    getTempCount: function (successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "CordovaStepCounter", "get_temp_count", []);
+    },
+    setResetTemp: function(successCallback, errorCallback) {
+        cordova.exec(successCallback, errorCallback, "CordovaStepCounter", "set_reset_temp", []);
     },
  
     deviceCanCountSteps: function (successCallback, errorCallback) {
