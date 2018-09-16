@@ -165,6 +165,15 @@ public class StepCounterService extends Service implements SensorEventListener {
         Date currentDate = new Date();
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
 
+		try{
+		 Date givenDate = new Date();
+		 givenDate = dateFormatter.parse("2018-09-15");
+        }
+		catch (ParseException ex){
+		  Log.i(TAG, "error formateando fecha");
+		}
+		
+
         String currentDateString = dateFormatter.format(currentDate);
         SharedPreferences sharedPref = getSharedPreferences(CordovaStepCounter.USER_DATA_PREF, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
@@ -206,10 +215,14 @@ public class StepCounterService extends Service implements SensorEventListener {
         stepsCounted += 1;
         CordovaStepCounter.setTotalCount(sharedPref,stepsCounted);
 
-		Integer stepsTemp = CordovaStepCounter.getTempCount(sharedPref);
-        stepsTemp += 1;
-        CordovaStepCounter.setTempCount(sharedPref,stepsTemp);
-		Log.i(TAG, "Anotados pasos temporales: " + stepsTemp);
+		//Falta por integrar la fecha desde la que se contar�a para el concurso
+        if(currentDate.after(givenDate)) {
+            Log.i(TAG, "Fecha superior a : " + dateFormatter.format(givenDate));
+            Integer stepsTemp = CordovaStepCounter.getTempCount(sharedPref);
+            stepsTemp += 1;
+            CordovaStepCounter.setTempCount(sharedPref, stepsTemp);
+            Log.i(TAG, "Anotados pasos temporales: " + stepsTemp);
+        }
 
         //If offset has not been set or if saved offset is greater than today offset
         if (!haveSetOffset) {
