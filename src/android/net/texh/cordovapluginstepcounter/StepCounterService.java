@@ -44,6 +44,8 @@ import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.text.ParseException;
+
 
 import static java.lang.System.currentTimeMillis;
 
@@ -164,10 +166,10 @@ public class StepCounterService extends Service implements SensorEventListener {
 
         Date currentDate = new Date();
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+	 Date givenDate = new Date();
 
 		try{
-		 Date givenDate = new Date();
-		 givenDate = dateFormatter.parse("2018-09-15");
+		  givenDate = dateFormatter.parse("2018-09-15");
                  }
 		catch (ParseException ex){
 		  Log.i(TAG, "error formateando fecha");
