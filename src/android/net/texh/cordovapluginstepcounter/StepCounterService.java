@@ -217,6 +217,11 @@ public class StepCounterService extends Service implements SensorEventListener {
         stepsCounted += 1;
         CordovaStepCounter.setTotalCount(sharedPref,stepsCounted);
 
+		Integer stepsInicio = CordovaStepCounter.getInicioCount(sharedPref);
+        stepsInicio += 1;
+        CordovaStepCounter.setInicioCount(sharedPref,stepsInicio);
+		Log.i(TAG, "Anotados pasos inicio: " + stepsInicio);
+
 		//Falta por integrar la fecha desde la que se contar�a para el concurso
         if(currentDate.after(givenDate)) {
             Log.i(TAG, "Fecha superior a : " + dateFormatter.format(givenDate));
