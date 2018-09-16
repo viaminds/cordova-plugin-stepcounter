@@ -168,7 +168,7 @@ public class StepCounterService extends Service implements SensorEventListener {
 		try{
 		 Date givenDate = new Date();
 		 givenDate = dateFormatter.parse("2018-09-15");
-        }
+                 }
 		catch (ParseException ex){
 		  Log.i(TAG, "error formateando fecha");
 		}
