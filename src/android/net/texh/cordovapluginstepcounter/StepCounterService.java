@@ -161,7 +161,7 @@ public class StepCounterService extends Service implements SensorEventListener {
         Log.i(TAG, "onSensorChanged event!");
         Integer totalSteps = 0;
         Integer steps = Math.round(sensorEvent.values[0]);
-        //Integer daySteps = 0;
+        Integer daySteps = 0;
 		Integer dayStepsSEFH = 0;
         Integer dayOffset = 0;
 
