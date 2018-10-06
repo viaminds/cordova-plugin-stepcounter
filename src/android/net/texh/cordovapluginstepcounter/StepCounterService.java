@@ -161,7 +161,8 @@ public class StepCounterService extends Service implements SensorEventListener {
         Log.i(TAG, "onSensorChanged event!");
         Integer totalSteps = 0;
         Integer steps = Math.round(sensorEvent.values[0]);
-        Integer daySteps = 0;
+        //Integer daySteps = 0;
+		Integer dayStepsSEFH = 0;
         Integer dayOffset = 0;
 
         Date currentDate = new Date();
@@ -197,10 +198,12 @@ public class StepCounterService extends Service implements SensorEventListener {
             try {
                 dayData = pData.getJSONObject(currentDateString);
                 dayOffset = dayData.getInt("offset");
-                daySteps = dayData.getInt("steps");
+                dayStepsSEFH = dayData.getInt("steps");
+				Log.d(TAG,"Partimos de dayStepsSEFH : "+dayStepsSEFH);
                 haveSetOffset = true;
 
                 //If steps is less thant dayOffset, means that dayOffset is not correct (due to reboot in the middle of the day)
+				
                 if(steps < dayOffset){
                     haveSetOffset = false;
                 }
@@ -241,16 +244,19 @@ public class StepCounterService extends Service implements SensorEventListener {
         }
 
         //First 'steps' is 0 an not 1
-        daySteps = (steps+1) - dayOffset;
+		dayStepsSEFH += 1;
+        //daySteps = (steps+1) - dayOffset;
+		
         //Log all this
-        Log.i(TAG, "** daySteps :"+ daySteps+" ** stepCounted :"+stepsCounted);
+        Log.i(TAG, "** daySteps a Introducir:"+ dayStepsSEFH +" ** stepCounted :"+stepsCounted);
 
 
         //Save calculated values to SharedPreferences
         try{
-            dayData.put("steps",daySteps);
+            dayData.put("steps",dayStepsSEFH);
             dayData.put("offset",dayOffset);
             pData.put(currentDateString,dayData);
+			 Log.i(TAG, "** Introducimos datosDay :"+ dayStepsSEFH );
         }catch (JSONException err){
             Log.e(TAG,"Exception while setting int in JSON for "+currentDateString);
         }
